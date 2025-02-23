@@ -1,4 +1,3 @@
-<!-- panel.html -->
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -10,18 +9,47 @@
     // Cria a instância do socket apenas uma vez para esta página
     let socket = io();
 
-    // Função para atualizar as informações do jogador
+    // Objeto para armazenar o HP anterior dos jogadores (caso você queira usar em outras lógicas)
+    let hpAnteriores = {};
+
+    // Função para atualizar as informações gerais do jogador
     function atualizarJogador(jogadorId) {
-      let novoNome = document.getElementById(`nome-jogador-${jogadorId}`).innerText;
-      let novaLocalizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
-      let novoHp = document.getElementById(`hp-jogador-${jogadorId}`).value;
-      let novoHpMax = document.getElementById(`hp-max-jogador-${jogadorId}`).value;
+      let nomeJogador = document.getElementById(`nome-jogador-${jogadorId}`).innerText;
+      let localizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
+      let hpAtual = parseInt(document.getElementById(`hp-jogador-${jogadorId}`).value);
+      let hpMax = parseInt(document.getElementById(`hp-max-jogador-${jogadorId}`).value);
+
+      // Envia o evento de dano ou cura, dependendo da diferença de HP
+      if (hpAnteriores[jogadorId] !== undefined) {
+        let diferenca = hpAnteriores[jogadorId] - hpAtual;
+
+        if (diferenca > 0) {
+          // Se a diferença for positiva, foi um dano
+          socket.emit('new_damage', {
+            jogadorId: jogadorId,
+            dano: diferenca,
+            sessaoId: '{{ sessao_id }}'
+          });
+        } else if (diferenca < 0) {
+          // Se a diferença for negativa, foi uma cura
+          socket.emit('new_heal', {
+            jogadorId: jogadorId,
+            heal: -diferenca,
+            sessaoId: '{{ sessao_id }}'
+          });
+        }
+      }
+
+      // Atualiza o HP armazenado (se necessário para outra lógica)
+      hpAnteriores[jogadorId] = hpAtual;
+
+      // Emite a atualização geral (nome, localização, HP e HP Máximo)
       socket.emit('atualizar_jogador', {
         jogadorId: jogadorId,
-        novoNome: novoNome,
-        novaLocalizacao: novaLocalizacao,
-        novoHp: novoHp,
-        novoHpMax: novoHpMax
+        novoNome: nomeJogador,
+        novaLocalizacao: localizacao,
+        novoHp: hpAtual,
+        novoHpMax: hpMax
       });
     }
 
@@ -36,7 +64,7 @@
 <body>
   <h1>Painel do Mestre - Sessão: {{ sessao.nome }}</h1>
 
-  <!-- Incluir o campo de Lançamentos de Dados (usa o mesmo socket criado acima) -->
+  <!-- Inclui os eventos (todos serão exibidos juntos) -->
   {% include 'events.html' %}
 
   <!-- Lista de Jogadores -->
@@ -46,9 +74,9 @@
       <li id="jogador-{{ jogador.id }}">
         <fieldset>
           <legend id="nome-jogador-{{ jogador.id }}">{{ jogador.nome }}</legend> 
-          Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
-          HP: <input type="number" id="hp-jogador-{{ jogador.id }}" value="{{ jogador.hp }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
-          HP Máximo: <input type="number" id="hp-max-jogador-{{ jogador.id }}" value="{{ jogador.hp_max }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
+          Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
+          HP: <input type="number" id="hp-jogador-{{ jogador.id }}" value="{{ jogador.hp }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
+          HP Máximo: <input type="number" id="hp-max-jogador-{{ jogador.id }}" value="{{ jogador.hp_max }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
           Link do Jogador: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador.id) }}" target="_blank">Entrar</a><br>
           <button type="button" onclick="removerJogador('{{ jogador.id }}')">Remover Jogador</button>
         </fieldset>
