@@ -9,23 +9,42 @@
         let sessaoId = "{{ sessao_id }}";
         let socket = io();
 
-        async function atualizarStatus() {
-            let vida = prompt("Nova vida do monstro:");
-            let posicao = prompt("Nova posição:");
+        // Função que envia dados ao backend sempre que uma caixa de texto for alterada
+        function atualizarStatus() {
+            let vida = document.getElementById("vida_monstro").value;
+            let posicao = document.getElementById("posicao").value;
 
-            if (vida && posicao) {
-                await fetch(`/atualizar_status/${sessaoId}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ vida_monstro: vida, posicao: posicao })
-                });
-            }
+            // Envia dados ao backend via fetch
+            fetch(`/atualizar_status/${sessaoId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ vida_monstro: vida, posicao: posicao })
+            });
         }
 
+        // Escuta eventos de atualização de status
         socket.on(`update_status_${sessaoId}`, (data) => {
             document.getElementById("status").innerText = `Vida do monstro: ${data.vida_monstro}, Local: ${data.posicao}`;
         });
+    </script>
+</head>
+<body>
+    <h1>Painel do Mestre - Sessão: {{ sessao_id }}</h1>
+    <p id="status">Aguardando atualizações...</p>
 
+    <label for="vida_monstro">Vida do Monstro:</label>
+    <input type="text" id="vida_monstro" name="vida_monstro" oninput="atualizarStatus()" placeholder="Digite a vida do monstro">
+
+    <br><br>
+
+    <label for="posicao">Posição:</label>
+    <input type="text" id="posicao" name="posicao" oninput="atualizarStatus()" placeholder="Digite a posição do monstro">
+
+    <h3>Compartilhe este link com os jogadores:</h3>
+    <p id="linkJogadores">{{ link_jogadores }}</p>
+    <button onclick="copiarLink()">Copiar Link</button>
+
+    <script>
         function copiarLink() {
             let link = document.getElementById("linkJogadores");
             navigator.clipboard.writeText(link.innerText).then(() => {
@@ -33,15 +52,6 @@
             });
         }
     </script>
-</head>
-<body>
-    <h1>Painel do Mestre - Sessão: {{ sessao_id }}</h1>
-    <p id="status">Aguardando atualizações...</p>
-    <button onclick="atualizarStatus()">Atualizar Status</button>
-
-    <h3>Compartilhe este link com os jogadores:</h3>
-    <p id="linkJogadores">{{ link_jogadores }}</p>
-    <button onclick="copiarLink()">Copiar Link</button>
 </body>
 </html>
 

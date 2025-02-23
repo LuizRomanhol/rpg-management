@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 from flask_socketio import SocketIO
 import paho.mqtt.client as mqtt
-import uuid  # Para gerar IDs únicos
+import uuid
 
 app = Flask(__name__, template_folder="templates")
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -28,17 +28,17 @@ def index():
 
 @app.route("/criar_sessao", methods=["POST"])
 def criar_sessao():
-    nome = request.form.get("nome")  # Recebe o nome da sessão via formulário
+    nome = request.form.get("nome")
 
     if not nome:
         return jsonify({"erro": "Nome da sessão obrigatório"}), 400
 
     sessao_id = str(uuid.uuid4())[:8]  # Gera um ID curto
-    topico = f"rpg/{sessao_id}"  # Nome do tópico MQTT
+    topico = f"rpg/{sessao_id}"
 
     sessoes[sessao_id] = {"nome": nome, "topico": topico, "mestre": None, "jogadores": []}
 
-    return redirect(url_for("painel_mestre", sessao_id=sessao_id))  # Redireciona para o painel
+    return redirect(url_for("painel_mestre", sessao_id=sessao_id))
 
 
 @app.route("/room/<sessao_id>")
@@ -63,11 +63,14 @@ def atualizar_status(sessao_id):
     if sessao_id not in sessoes:
         return jsonify({"erro": "Sessão não encontrada"}), 404
 
-    dados = request.json  # Exemplo: {"vida_monstro": 30, "posicao": "Floresta"}
+    dados = request.json
     topico = sessoes[sessao_id]["topico"]
 
-    mqtt_client.publish(topico, str(dados))  # Envia atualização MQTT
-    socketio.emit(f"update_status_{sessao_id}", dados)  # Atualiza frontend específico
+    # Envia os dados para o tópico MQTT
+    mqtt_client.publish(topico, str(dados))
+
+    # Atualiza os clientes com a nova informação
+    socketio.emit(f"update_status_{sessao_id}", dados)
 
     return jsonify({"mensagem": "Status atualizado"})
 
