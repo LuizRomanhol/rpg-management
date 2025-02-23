@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de RPG</title>
+    <script>
+        async function criarSessao() {
+            let nome = prompt("Nome da sessão:");
+            if (!nome) return;
+
+            let resposta = await fetch("/criar_sessao", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nome })
+            });
+
+            let dados = await resposta.json();
+            if (dados.redirect) {
+                window.location.href = dados.redirect;  // Redireciona para o painel do mestre
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Gerenciador de Sessões de RPG</h1>
+    <button onclick="criarSessao()">Criar Sessão</button>
+</body>
+</html>
+

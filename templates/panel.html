@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Mestre</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+    <script>
+        let sessaoId = "{{ sessao_id }}";
+        let socket = io();
+
+        async function atualizarStatus() {
+            let vida = prompt("Nova vida do monstro:");
+            let posicao = prompt("Nova posição:");
+
+            if (vida && posicao) {
+                await fetch(`/atualizar_status/${sessaoId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ vida_monstro: vida, posicao: posicao })
+                });
+            }
+        }
+
+        socket.on(`update_status_${sessaoId}`, (data) => {
+            document.getElementById("status").innerText = `Vida do monstro: ${data.vida_monstro}, Local: ${data.posicao}`;
+        });
+
+        function copiarLink() {
+            let link = document.getElementById("linkJogadores");
+            navigator.clipboard.writeText(link.innerText).then(() => {
+                alert("Link copiado!");
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Painel do Mestre - Sessão: {{ sessao_id }}</h1>
+    <p id="status">Aguardando atualizações...</p>
+    <button onclick="atualizarStatus()">Atualizar Status</button>
+
+    <h3>Compartilhe este link com os jogadores:</h3>
+    <p id="linkJogadores">{{ link_jogadores }}</p>
+    <button onclick="copiarLink()">Copiar Link</button>
+</body>
+</html>
+
