@@ -2,19 +2,24 @@
 <fieldset>
   <legend>Lançamentos de Dados</legend>
   <ul id="resultados-lancamento">
-    <!-- Os resultados dos lançamentos serão exibidos aqui -->
+    <!-- Os resultados dos lançamentos de dados serão exibidos aqui -->
   </ul>
 </fieldset>
 
 <script>
-  // Verifica se a variável 'socket' já existe
+  // Usa a instância do socket já criada na página (não recria aqui)
   if (typeof socket === 'undefined') {
     console.error("Socket não definido! Certifique-se de instanciar o socket antes de incluir events.html.");
   } else {
     socket.on('evento_lancamento_dado_{{ sessao_id }}', (data) => {
       let resultadosList = document.getElementById('resultados-lancamento');
       let novoLancamento = document.createElement('li');
-      novoLancamento.textContent = `Jogador ${data.jogadorId} lançou o dado ${data.dado} e obteve: ${data.resultado}`;
+      
+      // Aqui vamos garantir que o nome do jogador seja exibido
+      let nomeJogador = data.nome ? data.nome : 'Desconhecido'; // Usando o nome enviado, se existir
+
+      // Agora exibe o nome do jogador em vez do ID
+      novoLancamento.textContent = `Jogador ${nomeJogador} lançou o dado ${data.dado} e obteve: ${data.resultado}`;
       resultadosList.appendChild(novoLancamento);
     });
   }

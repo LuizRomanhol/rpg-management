@@ -36,6 +36,9 @@
 <body>
   <h1>Painel do Mestre - Sessão: {{ sessao.nome }}</h1>
 
+  <!-- Incluir o campo de Lançamentos de Dados (usa o mesmo socket criado acima) -->
+  {% include 'events.html' %}
+
   <!-- Lista de Jogadores -->
   <h2>Jogadores:</h2>
   <ul>
@@ -52,9 +55,6 @@
       </li>
     {% endfor %}
   </ul>
-
-  <!-- Incluir o campo de Lançamentos de Dados (usa o mesmo socket criado acima) -->
-  {% include 'events.html' %}
 
   <h2>Criar Jogador:</h2>
   <form action="/painel/{{ sessao_id }}" method="POST">

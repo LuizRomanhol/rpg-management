@@ -48,7 +48,7 @@ def painel(sessao_id):
 def room(sessao_id, jogador_id):
     sessao = sessao_db.get(sessao_id)
     jogador = get_jogador_por_id(jogador_id)
-    return render_template('room.html', sessao_id=sessao_id, jogador_id=jogador_id, jogador=jogador)
+    return render_template('room.html', sessao_id=sessao_id, jogador_id=jogador_id, jogador=jogador, sessao=sessao)
 
 @socketio.on('atualizar_jogador')
 def atualizar_jogador(data):
@@ -94,13 +94,16 @@ def lancar_dado(data):
     dado = data['dado']
     sessao_id = data['sessaoId']
 
-    # Busca o jogador para obter o nome
-    jogador = get_jogador_por_id(jogador_id)
-    nome_jogador = jogador['nome'] if jogador else jogador_id
+    # Tenta usar o nome enviado pelo cliente
+    nome_jogador = data.get('nome')
+    if not nome_jogador:
+        # Caso não tenha sido enviado, busca na base (ou usa o id como fallback)
+        jogador = get_jogador_por_id(jogador_id)
+        nome_jogador = jogador['nome'] if jogador else jogador_id
 
     emit(f'evento_lancamento_dado_{sessao_id}', {
         'jogadorId': jogador_id,
-        'nome': nome_jogador,  # Adicionado o nome do jogador
+        'nome': nome_jogador,
         'dado': dado,
         'resultado': resultado
     }, broadcast=True)

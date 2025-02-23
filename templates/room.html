@@ -16,6 +16,7 @@
       let resultado = Math.floor(Math.random() * dado) + 1;
       socket.emit('lançar_dado', {
         jogadorId: '{{ jogador_id }}',
+        nome: '{{ jogador.nome }}',  // Enviamos o nome do jogador
         dado: dado,
         resultado: resultado,
         sessaoId: '{{ sessao_id }}'
@@ -33,7 +34,7 @@
   </script>
 </head>
 <body>
-  <h1>Sessão de RPG - Jogador</h1>
+  <h1>Painel do Jogador - Sessão: {{ sessao.nome }}</h1>
 
   <fieldset>
     <legend>Jogador: <span id="nome-jogador">{{ jogador.nome }}</span></legend>
@@ -41,16 +42,18 @@
     HP: <span id="hp-jogador">{{ jogador.hp }} / {{ jogador.hp_max }}</span><br>
   </fieldset>
 
-  <h3>Lançar Dados</h3>
-  <button onclick="lancarDado(20)">Lançar D20</button>
-  <button onclick="lancarDado(12)">Lançar D12</button>
-  <button onclick="lancarDado(10)">Lançar D10</button>
-  <button onclick="lancarDado(8)">Lançar D8</button>
-  <button onclick="lancarDado(6)">Lançar D6</button>
-  <button onclick="lancarDado(4)">Lançar D4</button>
+  <fieldset>
+    <legend>Lançar Dados</legend>
+    <button onclick="lancarDado(20)">Lançar D20</button>
+    <button onclick="lancarDado(12)">Lançar D12</button>
+    <button onclick="lancarDado(10)">Lançar D10</button>
+    <button onclick="lancarDado(8)">Lançar D8</button>
+    <button onclick="lancarDado(6)">Lançar D6</button>
+    <button onclick="lancarDado(4)">Lançar D4</button>
+  </fieldset>
 
-  <h2>Resultados dos Lançamentos</h2>
-  <!-- Inclui o events.html, que usará o mesmo socket já instanciado -->
+  <h2>Resultados dos Lançamentos:</h2>
+  <!-- Inclui o events.html, que utilizará o mesmo socket -->
   {% include 'events.html' %}
 </body>
 </html>
