@@ -78,10 +78,18 @@ def atualizar_jogador(data):
 @socketio.on('remover_jogador')
 def remover_jogador(data):
     jogador_id = data['jogadorId']
+    sessao_id = data['sessaoId']
+    
+    # Remover jogador do banco de dados
     remove_jogador(jogador_id)
 
+    # Remover jogador da lista da sessão
+    if sessao_id in sessao_db:
+        sessao = sessao_db[sessao_id]
+        sessao['jogadores'] = [j for j in sessao['jogadores'] if j['id'] != jogador_id]
+
     # Emitir para todos os jogadores na sessão para atualizar a lista
-    emit(f'remover_jogador_{data["sessaoId"]}', {'jogadorId': jogador_id}, broadcast=True)
+    emit(f'remover_jogador_{sessao_id}', {'jogadorId': jogador_id}, broadcast=True)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

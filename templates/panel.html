@@ -24,21 +24,21 @@
             });
         }
 
-        // Função para remover jogador
-        function removerJogador(jogadorId) {
-            if (confirm("Tem certeza que deseja remover este jogador?")) {
-                socket.emit('remover_jogador', { jogadorId: jogadorId, sessaoId: '{{ sessao_id }}' });
-            }
-        }
+		// Função para remover jogador
+		function removerJogador(jogadorId) {
+		    if (confirm("Tem certeza que deseja remover este jogador?")) {
+		        socket.emit('remover_jogador', { jogadorId: jogadorId, sessaoId: '{{ sessao_id }}' });
+		    }
+		}
 
-        // Atualiza a lista de jogadores para todos
-        socket.on('remover_jogador_{{ sessao_id }}', (data) => {
-            let jogadorId = data.jogadorId;
-            let jogadorElement = document.getElementById(`jogador-${jogadorId}`);
-            if (jogadorElement) {
-                jogadorElement.remove();
-            }
-        });
+		// Atualiza a lista de jogadores para todos
+		socket.on('remover_jogador_{{ sessao_id }}', (data) => {
+		    let jogadorId = data.jogadorId;
+		    let jogadorElement = document.getElementById(`jogador-${jogadorId}`);
+		    if (jogadorElement) {
+		        jogadorElement.remove();
+		    }
+		});
     </script>
 </head>
 <body>
