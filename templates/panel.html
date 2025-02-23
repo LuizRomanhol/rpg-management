@@ -10,7 +10,7 @@
 
         // Função para atualizar as informações do jogador
         function atualizarJogador(jogadorId) {
-            let novoNome = document.getElementById(`nome-jogador-${jogadorId}`).value;
+            let novoNome = document.getElementById(`nome-jogador-${jogadorId}`).innerText;  // Agora pegamos o conteúdo do legend
             let novaLocalizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
             let novoHp = document.getElementById(`hp-jogador-${jogadorId}`).value;
             let novoHpMax = document.getElementById(`hp-max-jogador-${jogadorId}`).value;
@@ -49,8 +49,8 @@
         {% for jogador in sessao.jogadores %}
             <li id="jogador-{{ jogador.id }}">
                 <fieldset>
-                    <legend>Jogador: {{ jogador.nome }}</legend>
-                    Nome: <input type="text" id="nome-jogador-{{ jogador.id }}" value="{{ jogador.nome }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
+                    <legend id="nome-jogador-{{ jogador.id }}">{{ jogador.nome }}</legend>  <!-- Nome exibido aqui -->
+                     
                     Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
                     HP: <input type="number" id="hp-jogador-{{ jogador.id }}" value="{{ jogador.hp }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
                     HP Máximo: <input type="number" id="hp-max-jogador-{{ jogador.id }}" value="{{ jogador.hp_max }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>

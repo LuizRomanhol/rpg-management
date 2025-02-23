@@ -27,9 +27,6 @@
         HP: <span id="hp-jogador">{{ jogador.hp }} / {{ jogador.hp_max }}</span><br>
     </fieldset>
 
-    <h2>Link para a Sessão</h2>
-    <p>Compartilhe o link com os outros jogadores: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador_id) }}" target="_blank">{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador_id, _external=True) }}</a></p>
-
 </body>
 </html>
 
