@@ -135,6 +135,19 @@ def new_heal(data):
         'mensagem': mensagem
     }, broadcast=True)
 
+@socketio.on('change_location')
+def new_heal(data):
+    jogador_id = data['jogadorId']
+    localizacao = data['novaLocalizacao']
+    sessao_id = data['sessaoId']
+    
+    jogador = get_jogador_por_id(jogador_id)
+    nome_jogador = jogador['nome'] if jogador else jogador_id
+    mensagem = f"{nome_jogador} chegou em {localizacao}"
+    emit(f'evento_localizacao_atualizado_{sessao_id}', {
+        'mensagem': mensagem
+    }, broadcast=True)
+    
 if __name__ == '__main__':
     socketio.run(app, debug=True)
 

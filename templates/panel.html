@@ -53,6 +53,18 @@
       });
     }
 
+    // Função para alterar a localização
+    function alterarLocalizacao(jogadorId) {
+      let localizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
+
+      // Emitir evento para backend com a nova localização
+      socket.emit('change_location', {
+        jogadorId: jogadorId,
+        novaLocalizacao: localizacao,
+        sessaoId: '{{ sessao_id }}'
+      });
+    }
+
     // Função para remover jogador
     function removerJogador(jogadorId) {
       if (confirm("Tem certeza que deseja remover este jogador?")) {
@@ -74,7 +86,7 @@
       <li id="jogador-{{ jogador.id }}">
         <fieldset>
           <legend id="nome-jogador-{{ jogador.id }}">{{ jogador.nome }}</legend> 
-          Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
+          Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onblur="alterarLocalizacao('{{ jogador.id }}')" /><br>
           HP: <input type="number" id="hp-jogador-{{ jogador.id }}" value="{{ jogador.hp }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
           HP Máximo: <input type="number" id="hp-max-jogador-{{ jogador.id }}" value="{{ jogador.hp_max }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
           Link do Jogador: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador.id) }}" target="_blank">Entrar</a><br>

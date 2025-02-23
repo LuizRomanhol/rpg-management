@@ -2,7 +2,7 @@
 <fieldset>
   <legend>Eventos</legend>
   <ul id="resultados-eventos">
-    <!-- Todos os eventos (lançamento de dado, dano, cura) serão exibidos aqui -->
+    <!-- Todos os eventos (lançamento de dado, dano, cura, mudança de localização) serão exibidos aqui -->
   </ul>
 </fieldset>
 
@@ -21,6 +21,14 @@
 
     // Evento para dano e cura (alteração de HP)
     socket.on('evento_hp_atualizado_{{ sessao_id }}', (data) => {
+      let lista = document.getElementById('resultados-eventos');
+      let item = document.createElement('li');
+      item.textContent = data.mensagem;
+      lista.appendChild(item);
+    });
+
+    // Evento para mudança de localização
+	socket.on('evento_localizacao_atualizado_{{ sessao_id }}', (data) => {
       let lista = document.getElementById('resultados-eventos');
       let item = document.createElement('li');
       item.textContent = data.mensagem;
