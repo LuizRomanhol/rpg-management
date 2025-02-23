@@ -1,80 +1,65 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for
-from flask_socketio import SocketIO
-import paho.mqtt.client as mqtt
+from flask import Flask, render_template, request, redirect, url_for
+from flask_socketio import SocketIO, emit
 import uuid
 
-app = Flask(__name__, template_folder="templates")
-socketio = SocketIO(app, cors_allowed_origins="*")
+app = Flask(__name__)
+socketio = SocketIO(app)
 
-# Configurações do broker MQTT
-MQTT_BROKER = "test.mosquitto.org"
-MQTT_PORT = 1883
+# Armazenamento de sessões e jogadores (substitua por um banco de dados real, se necessário)
+sessao_db = {}
+jogadores_db = {}
 
-# Cliente MQTT
-mqtt_client = mqtt.Client()
+# Função para pegar o jogador por ID
+def get_jogador_por_id(jogador_id):
+    return jogadores_db.get(jogador_id)
 
-# Dicionário para armazenar sessões ativas
-sessoes = {}
+# Função para salvar o jogador
+def save_jogador(jogador):
+    jogadores_db[jogador['id']] = jogador
 
-# Conectar ao broker
-mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-mqtt_client.loop_start()
-
-
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template('index.html')
 
-
-@app.route("/criar_sessao", methods=["POST"])
+@app.route('/criar_sessao', methods=['POST'])
 def criar_sessao():
-    nome = request.form.get("nome")
+    sessao_id = str(uuid.uuid4())  # Gerar um ID único para a sessão
+    sessao_db[sessao_id] = {'nome': request.form['nome'], 'jogadores': []}
+    return redirect(url_for('painel', sessao_id=sessao_id))
 
-    if not nome:
-        return jsonify({"erro": "Nome da sessão obrigatório"}), 400
+@app.route('/painel/<sessao_id>', methods=['GET', 'POST'])
+def painel(sessao_id):
+    sessao = sessao_db.get(sessao_id)
+    if request.method == 'POST':
+        jogador_id = str(uuid.uuid4())
+        nome_jogador = request.form['nome']
+        jogador = {'id': jogador_id, 'nome': nome_jogador, 'sessao_id': sessao_id}
+        jogadores_db[jogador_id] = jogador
+        sessao['jogadores'].append(jogador)
+    return render_template('panel.html', sessao_id=sessao_id, sessao=sessao)
 
-    sessao_id = str(uuid.uuid4())[:8]  # Gera um ID curto
-    topico = f"rpg/{sessao_id}"
+@app.route('/room/<sessao_id>/<jogador_id>')
+def room(sessao_id, jogador_id):
+    sessao = sessao_db.get(sessao_id)
+    jogador = get_jogador_por_id(jogador_id)
+    return render_template('room.html', sessao_id=sessao_id, jogador_id=jogador_id, nome_jogador=jogador['nome'])
 
-    sessoes[sessao_id] = {"nome": nome, "topico": topico, "mestre": None, "jogadores": []}
+@socketio.on('atualizar_nome')
+def atualizar_nome(data):
+    jogador_id = data['jogadorId']
+    novo_nome = data['novoNome']
 
-    return redirect(url_for("painel_mestre", sessao_id=sessao_id))
+    # Atualizar nome no banco de dados
+    jogador = get_jogador_por_id(jogador_id)
+    jogador['nome'] = novo_nome
+    save_jogador(jogador)
 
+    # Emitir para todos os jogadores na sessão
+    emit(f'atualizar_nome_jogador_{jogador["sessao_id"]}', {
+        'jogadorId': jogador['id'],
+        'novoNome': novo_nome
+    }, broadcast=True)
 
-@app.route("/room/<sessao_id>")
-def visualizar_room(sessao_id):
-    if sessao_id not in sessoes:
-        return "Sessão não encontrada", 404
-
-    return render_template("room.html", sessao_id=sessao_id, topico=sessoes[sessao_id]["topico"])
-
-
-@app.route("/panel/<sessao_id>")
-def painel_mestre(sessao_id):
-    if sessao_id not in sessoes:
-        return "Sessão não encontrada", 404
-
-    link_jogadores = f"{request.host_url}room/{sessao_id}"
-    return render_template("panel.html", sessao_id=sessao_id, topico=sessoes[sessao_id]["topico"], link_jogadores=link_jogadores)
-
-
-@app.route("/atualizar_status/<sessao_id>", methods=["POST"])
-def atualizar_status(sessao_id):
-    if sessao_id not in sessoes:
-        return jsonify({"erro": "Sessão não encontrada"}), 404
-
-    dados = request.json
-    topico = sessoes[sessao_id]["topico"]
-
-    # Envia os dados para o tópico MQTT
-    mqtt_client.publish(topico, str(dados))
-
-    # Atualiza os clientes com a nova informação
-    socketio.emit(f"update_status_{sessao_id}", dados)
-
-    return jsonify({"mensagem": "Status atualizado"})
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     socketio.run(app, debug=True)
 

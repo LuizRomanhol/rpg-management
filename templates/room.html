@@ -3,20 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sessão de RPG</title>
+    <title>Sessão de RPG - Jogador</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
     <script>
         let sessaoId = "{{ sessao_id }}";
+        let jogadorId = "{{ jogador_id }}";
         let socket = io();
 
-        socket.on(`update_status_${sessaoId}`, (data) => {
-            document.getElementById("status").innerText = `Vida do monstro: ${data.vida_monstro}, Local: ${data.posicao}`;
+        // Atualiza o nome do jogador se for alterado pelo mestre
+        socket.on(`atualizar_nome_jogador_${sessaoId}`, (data) => {
+            if (data.jogadorId === jogadorId) {
+                document.getElementById("nome_jogador").innerText = data.novoNome;
+            }
         });
     </script>
 </head>
 <body>
-    <h1>Sessão de RPG - Sessão: {{ sessao_id }}</h1>
-    <p id="status">Aguardando atualizações...</p>
+    <h1>Sessão de RPG - Jogador</h1>
+    <h3>Bem-vindo, <span id="nome_jogador">{{ nome_jogador }}</span></h3>
+
+    <h4>Informações da Sessão:</h4>
+    <p><strong>ID da Sessão:</strong> {{ sessao_id }}</p>
+    <p><strong>Link para entrar novamente:</strong> <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador_id) }}" target="_blank">Clique aqui</a></p>
 </body>
 </html>
 

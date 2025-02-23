@@ -6,52 +6,34 @@
     <title>Painel do Mestre</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
     <script>
-        let sessaoId = "{{ sessao_id }}";
         let socket = io();
-
-        // Função que envia dados ao backend sempre que uma caixa de texto for alterada
-        function atualizarStatus() {
-            let vida = document.getElementById("vida_monstro").value;
-            let posicao = document.getElementById("posicao").value;
-
-            // Envia dados ao backend via fetch
-            fetch(`/atualizar_status/${sessaoId}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ vida_monstro: vida, posicao: posicao })
-            });
+        
+        // Função para atualizar o nome do jogador
+        function atualizarNome(jogadorId) {
+            let novoNome = document.getElementById(`nome-jogador-${jogadorId}`).value;
+            socket.emit('atualizar_nome', { jogadorId: jogadorId, novoNome: novoNome });
         }
-
-        // Escuta eventos de atualização de status
-        socket.on(`update_status_${sessaoId}`, (data) => {
-            document.getElementById("status").innerText = `Vida do monstro: ${data.vida_monstro}, Local: ${data.posicao}`;
-        });
     </script>
 </head>
 <body>
-    <h1>Painel do Mestre - Sessão: {{ sessao_id }}</h1>
-    <p id="status">Aguardando atualizações...</p>
+    <h1>Painel do Mestre - Sessão: {{ sessao.nome }}</h1>
 
-    <label for="vida_monstro">Vida do Monstro:</label>
-    <input type="text" id="vida_monstro" name="vida_monstro" oninput="atualizarStatus()" placeholder="Digite a vida do monstro">
+    <h2>Jogadores:</h2>
+    <ul>
+        {% for jogador in sessao.jogadores %}
+            <li>
+                <input type="text" id="nome-jogador-{{ jogador.id }}" value="{{ jogador.nome }}" onchange="atualizarNome('{{ jogador.id }}')" />
+                <span>Link do jogador: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador.id) }}" target="_blank">Entrar</a></span>
+            </li>
+        {% endfor %}
+    </ul>
 
-    <br><br>
-
-    <label for="posicao">Posição:</label>
-    <input type="text" id="posicao" name="posicao" oninput="atualizarStatus()" placeholder="Digite a posição do monstro">
-
-    <h3>Compartilhe este link com os jogadores:</h3>
-    <p id="linkJogadores">{{ link_jogadores }}</p>
-    <button onclick="copiarLink()">Copiar Link</button>
-
-    <script>
-        function copiarLink() {
-            let link = document.getElementById("linkJogadores");
-            navigator.clipboard.writeText(link.innerText).then(() => {
-                alert("Link copiado!");
-            });
-        }
-    </script>
+    <h2>Criar Jogador:</h2>
+    <form action="/painel/{{ sessao_id }}" method="POST">
+        <label for="nome">Nome do Jogador:</label>
+        <input type="text" id="nome" name="nome" required>
+        <button type="submit">Adicionar Jogador</button>
+    </form>
 </body>
 </html>
 
