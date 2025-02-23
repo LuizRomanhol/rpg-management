@@ -7,12 +7,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
     <script>
         let socket = io();
-        
-        // Função para atualizar o nome do jogador
-        function atualizarNome(jogadorId) {
+
+        // Função para atualizar as informações do jogador
+        function atualizarJogador(jogadorId) {
             let novoNome = document.getElementById(`nome-jogador-${jogadorId}`).value;
-            socket.emit('atualizar_nome', { jogadorId: jogadorId, novoNome: novoNome });
+            let novaLocalizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
+            let novoHp = document.getElementById(`hp-jogador-${jogadorId}`).value;
+            let novoHpMax = document.getElementById(`hp-max-jogador-${jogadorId}`).value;
+
+            socket.emit('atualizar_jogador', {
+                jogadorId: jogadorId,
+                novoNome: novoNome,
+                novaLocalizacao: novaLocalizacao,
+                novoHp: novoHp,
+                novoHpMax: novoHpMax
+            });
         }
+
+        // Função para remover jogador
+        function removerJogador(jogadorId) {
+            if (confirm("Tem certeza que deseja remover este jogador?")) {
+                socket.emit('remover_jogador', { jogadorId: jogadorId, sessaoId: '{{ sessao_id }}' });
+            }
+        }
+
+        // Atualiza a lista de jogadores para todos
+        socket.on('remover_jogador_{{ sessao_id }}', (data) => {
+            let jogadorId = data.jogadorId;
+            let jogadorElement = document.getElementById(`jogador-${jogadorId}`);
+            if (jogadorElement) {
+                jogadorElement.remove();
+            }
+        });
     </script>
 </head>
 <body>
@@ -21,9 +47,16 @@
     <h2>Jogadores:</h2>
     <ul>
         {% for jogador in sessao.jogadores %}
-            <li>
-                <input type="text" id="nome-jogador-{{ jogador.id }}" value="{{ jogador.nome }}" onchange="atualizarNome('{{ jogador.id }}')" />
-                <span>Link do jogador: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador.id) }}" target="_blank">Entrar</a></span>
+            <li id="jogador-{{ jogador.id }}">
+                <fieldset>
+                    <legend>Jogador: {{ jogador.nome }}</legend>
+                    Nome: <input type="text" id="nome-jogador-{{ jogador.id }}" value="{{ jogador.nome }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
+                    Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
+                    HP: <input type="number" id="hp-jogador-{{ jogador.id }}" value="{{ jogador.hp }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
+                    HP Máximo: <input type="number" id="hp-max-jogador-{{ jogador.id }}" value="{{ jogador.hp_max }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
+                    Link do Jogador: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador.id) }}" target="_blank">Entrar</a><br>
+                    <button type="button" onclick="removerJogador('{{ jogador.id }}')">Remover Jogador</button>
+                </fieldset>
             </li>
         {% endfor %}
     </ul>

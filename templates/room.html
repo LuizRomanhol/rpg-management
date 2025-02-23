@@ -6,25 +6,30 @@
     <title>Sessão de RPG - Jogador</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
     <script>
-        let sessaoId = "{{ sessao_id }}";
-        let jogadorId = "{{ jogador_id }}";
         let socket = io();
 
-        // Atualiza o nome do jogador se for alterado pelo mestre
-        socket.on(`atualizar_nome_jogador_${sessaoId}`, (data) => {
-            if (data.jogadorId === jogadorId) {
-                document.getElementById("nome_jogador").innerText = data.novoNome;
+        // Função para atualizar as informações do jogador
+        socket.on('atualizar_jogador_{{ sessao_id }}', (data) => {
+            if (data.jogadorId === '{{ jogador_id }}') {
+                document.getElementById('nome-jogador').innerText = data.novoNome;
+                document.getElementById('localizacao-jogador').innerText = data.novaLocalizacao;
+                document.getElementById('hp-jogador').innerText = `${data.novoHp} / ${data.novoHpMax}`;
             }
         });
     </script>
 </head>
 <body>
     <h1>Sessão de RPG - Jogador</h1>
-    <h3>Bem-vindo, <span id="nome_jogador">{{ nome_jogador }}</span></h3>
 
-    <h4>Informações da Sessão:</h4>
-    <p><strong>ID da Sessão:</strong> {{ sessao_id }}</p>
-    <p><strong>Link para entrar novamente:</strong> <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador_id) }}" target="_blank">Clique aqui</a></p>
+    <fieldset>
+        <legend>Jogador: <span id="nome-jogador">{{ jogador.nome }}</span></legend>
+        Localização: <span id="localizacao-jogador">{{ jogador.localizacao }}</span><br>
+        HP: <span id="hp-jogador">{{ jogador.hp }} / {{ jogador.hp_max }}</span><br>
+    </fieldset>
+
+    <h2>Link para a Sessão</h2>
+    <p>Compartilhe o link com os outros jogadores: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador_id) }}" target="_blank">{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador_id, _external=True) }}</a></p>
+
 </body>
 </html>
 
