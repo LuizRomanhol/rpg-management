@@ -7,23 +7,8 @@
   <title>Sessão de RPG - Jogador</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
   <script>
-    // Cria a instância do socket apenas uma vez para esta página
     let socket = io();
 
-    // Função para enviar o lançamento de dado para o servidor
-    function lancarDado(dado) {
-      // Gera um número aleatório entre 1 e o valor do dado
-      let resultado = Math.floor(Math.random() * dado) + 1;
-      socket.emit('lançar_dado', {
-        jogadorId: '{{ jogador_id }}',
-        nome: '{{ jogador.nome }}',  // Enviamos o nome do jogador
-        dado: dado,
-        resultado: resultado,
-        sessaoId: '{{ sessao_id }}'
-      });
-    }
-
-    // Atualiza as informações do jogador (se necessário)
     socket.on('atualizar_jogador_{{ sessao_id }}', (data) => {
       if (data.jogadorId === '{{ jogador_id }}') {
         document.getElementById('nome-jogador').innerText = data.novoNome;
@@ -42,18 +27,9 @@
     HP: <span id="hp-jogador">{{ jogador.hp }} / {{ jogador.hp_max }}</span><br>
   </fieldset>
 
-  <fieldset>
-    <legend>Lançar Dados</legend>
-    <button onclick="lancarDado(20)">Lançar D20</button>
-    <button onclick="lancarDado(12)">Lançar D12</button>
-    <button onclick="lancarDado(10)">Lançar D10</button>
-    <button onclick="lancarDado(8)">Lançar D8</button>
-    <button onclick="lancarDado(6)">Lançar D6</button>
-    <button onclick="lancarDado(4)">Lançar D4</button>
-  </fieldset>
+  {% include 'dice.html' %}
 
   <h2>Resultados dos Lançamentos:</h2>
-  <!-- Inclui o events.html, que utilizará o mesmo socket -->
   {% include 'events.html' %}
 </body>
 </html>

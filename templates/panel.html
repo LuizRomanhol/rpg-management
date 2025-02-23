@@ -1,107 +1,109 @@
 <!DOCTYPE html>
 <html lang="pt">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel do Mestre</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
-  <script>
-    // Cria a instância do socket apenas uma vez para esta página
-    let socket = io();
-
-    // Objeto para armazenar o HP anterior dos jogadores (caso você queira usar em outras lógicas)
-    let hpAnteriores = {};
-
-    // Função para atualizar as informações gerais do jogador
-    function atualizarJogador(jogadorId) {
-      let nomeJogador = document.getElementById(`nome-jogador-${jogadorId}`).innerText;
-      let localizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
-      let hpAtual = parseInt(document.getElementById(`hp-jogador-${jogadorId}`).value);
-      let hpMax = parseInt(document.getElementById(`hp-max-jogador-${jogadorId}`).value);
-
-      // Envia o evento de dano ou cura, dependendo da diferença de HP
-      if (hpAnteriores[jogadorId] !== undefined) {
-        let diferenca = hpAnteriores[jogadorId] - hpAtual;
-
-        if (diferenca > 0) {
-          // Se a diferença for positiva, foi um dano
-          socket.emit('new_damage', {
-            jogadorId: jogadorId,
-            dano: diferenca,
-            sessaoId: '{{ sessao_id }}'
-          });
-        } else if (diferenca < 0) {
-          // Se a diferença for negativa, foi uma cura
-          socket.emit('new_heal', {
-            jogadorId: jogadorId,
-            heal: -diferenca,
-            sessaoId: '{{ sessao_id }}'
-          });
-        }
-      }
-
-      // Atualiza o HP armazenado (se necessário para outra lógica)
-      hpAnteriores[jogadorId] = hpAtual;
-
-      // Emite a atualização geral (nome, localização, HP e HP Máximo)
-      socket.emit('atualizar_jogador', {
-        jogadorId: jogadorId,
-        novoNome: nomeJogador,
-        novaLocalizacao: localizacao,
-        novoHp: hpAtual,
-        novoHpMax: hpMax
-      });
-    }
-
-    // Função para alterar a localização
-    function alterarLocalizacao(jogadorId) {
-      let localizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
-
-      // Emitir evento para backend com a nova localização
-      socket.emit('change_location', {
-        jogadorId: jogadorId,
-        novaLocalizacao: localizacao,
-        sessaoId: '{{ sessao_id }}'
-      });
-    }
-
-    // Função para remover jogador
-    function removerJogador(jogadorId) {
-      if (confirm("Tem certeza que deseja remover este jogador?")) {
-        socket.emit('remover_jogador', { jogadorId: jogadorId, sessaoId: '{{ sessao_id }}' });
-      }
-    }
-  </script>
-</head>
-<body>
-  <h1>Painel do Mestre - Sessão: {{ sessao.nome }}</h1>
-
-  <!-- Inclui os eventos (todos serão exibidos juntos) -->
-  {% include 'events.html' %}
-
-  <!-- Lista de Jogadores -->
-  <h2>Jogadores:</h2>
-  <ul>
-    {% for jogador in sessao.jogadores %}
-      <li id="jogador-{{ jogador.id }}">
-        <fieldset>
-          <legend id="nome-jogador-{{ jogador.id }}">{{ jogador.nome }}</legend> 
-          Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onblur="alterarLocalizacao('{{ jogador.id }}')" /><br>
-          HP: <input type="number" id="hp-jogador-{{ jogador.id }}" value="{{ jogador.hp }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
-          HP Máximo: <input type="number" id="hp-max-jogador-{{ jogador.id }}" value="{{ jogador.hp_max }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
-          Link do Jogador: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador.id) }}" target="_blank">Entrar</a><br>
-          <button type="button" onclick="removerJogador('{{ jogador.id }}')">Remover Jogador</button>
-        </fieldset>
-      </li>
-    {% endfor %}
-  </ul>
-
-  <h2>Criar Jogador:</h2>
-  <form action="/painel/{{ sessao_id }}" method="POST">
-    <label for="nome">Nome do Jogador:</label>
-    <input type="text" id="nome" name="nome" required>
-    <button type="submit">Adicionar Jogador</button>
-  </form>
-</body>
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Painel do Mestre</title>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+      <script>
+         // Cria a instância do socket apenas uma vez para esta página
+         let socket = io();
+         
+         // Objeto para armazenar o HP anterior dos jogadores
+         let hpAnteriores = {};
+         
+         document.addEventListener("DOMContentLoaded", function() {
+           // Inicializa hpAnteriores com os valores atuais dos jogadores
+           {% for jogador in sessao.jogadores %}
+             hpAnteriores["{{ jogador.id }}"] = parseInt(document.getElementById("hp-jogador-{{ jogador.id }}").value);
+           {% endfor %}
+         });
+         
+         // Função para atualizar as informações gerais do jogador
+         function atualizarJogador(jogadorId) {
+           let nomeJogador = document.getElementById(`nome-jogador-${jogadorId}`).innerText;
+           let localizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
+           let hpAtual = parseInt(document.getElementById(`hp-jogador-${jogadorId}`).value);
+           let hpMax = parseInt(document.getElementById(`hp-max-jogador-${jogadorId}`).value);
+         
+           // Envia o evento de dano ou cura, dependendo da diferença de HP
+           if (hpAnteriores[jogadorId] !== undefined) {
+             let diferenca = hpAnteriores[jogadorId] - hpAtual;
+         
+             if (diferenca > 0) {
+               // Se a diferença for positiva, foi um dano
+               socket.emit('new_damage', {
+                 jogadorId: jogadorId,
+                 dano: diferenca,
+                 sessaoId: '{{ sessao_id }}'
+               });
+             } else if (diferenca < 0) {
+               // Se a diferença for negativa, foi uma cura
+               socket.emit('new_heal', {
+                 jogadorId: jogadorId,
+                 heal: -diferenca,
+                 sessaoId: '{{ sessao_id }}'
+               });
+             }
+           }
+         
+           // Atualiza o HP armazenado
+           hpAnteriores[jogadorId] = hpAtual;
+         
+           // Emite a atualização geral
+           socket.emit('atualizar_jogador', {
+             jogadorId: jogadorId,
+             novoNome: nomeJogador,
+             novaLocalizacao: localizacao,
+             novoHp: hpAtual,
+             novoHpMax: hpMax
+           });
+         }
+         
+         // Função para alterar a localização
+         function alterarLocalizacao(jogadorId) {
+           let localizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
+           socket.emit('change_location', {
+             jogadorId: jogadorId,
+             novaLocalizacao: localizacao,
+             sessaoId: '{{ sessao_id }}'
+           });
+         }
+         
+         // Função para remover jogador
+         function removerJogador(jogadorId) {
+           if (confirm("Tem certeza que deseja remover este jogador?")) {
+             socket.emit('remover_jogador', { jogadorId: jogadorId, sessaoId: '{{ sessao_id }}' });
+           }
+         }
+      </script>
+   </head>
+   <body>
+      <h1>Painel do Mestre - Sessão: {{ sessao.nome }}</h1>
+      {% include 'events.html' %}
+      {% include 'dice.html' %}
+      <h2>Jogadores:</h2>
+      <ul>
+         {% for jogador in sessao.jogadores %}
+         <li id="jogador-{{ jogador.id }}">
+            <fieldset>
+               <legend id="nome-jogador-{{ jogador.id }}">{{ jogador.nome }}</legend>
+               Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onblur="alterarLocalizacao('{{ jogador.id }}')" /><br>
+               HP: <input type="number" id="hp-jogador-{{ jogador.id }}" value="{{ jogador.hp }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
+               HP Máximo: <input type="number" id="hp-max-jogador-{{ jogador.id }}" value="{{ jogador.hp_max }}" onblur="atualizarJogador('{{ jogador.id }}')" /><br>
+               Link do Jogador: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador.id) }}" target="_blank">Entrar</a><br>
+               <button type="button" onclick="removerJogador('{{ jogador.id }}')">Remover Jogador</button>
+            </fieldset>
+         </li>
+         {% endfor %}
+      </ul>
+      <details open>
+         <summary>Criar Jogador:</summary>
+         <form action="/painel/{{ sessao_id }}" method="POST">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" name="nome" required>
+            <button type="submit">Adicionar</button>
+         </form>
+      </details>
+   </body>
 </html>
-
