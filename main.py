@@ -79,17 +79,31 @@ def atualizar_jogador(data):
 def remover_jogador(data):
     jogador_id = data['jogadorId']
     sessao_id = data['sessaoId']
-    
-    # Remover jogador do banco de dados
     remove_jogador(jogador_id)
 
-    # Remover jogador da lista da sessão
-    if sessao_id in sessao_db:
-        sessao = sessao_db[sessao_id]
-        sessao['jogadores'] = [j for j in sessao['jogadores'] if j['id'] != jogador_id]
+    # Atualizar a sessão
+    sessao = sessao_db.get(sessao_id)
+    sessao['jogadores'] = [j for j in sessao['jogadores'] if j['id'] != jogador_id]
 
-    # Emitir para todos os jogadores na sessão para atualizar a lista
-    emit(f'remover_jogador_{sessao_id}', {'jogadorId': jogador_id}, broadcast=True)
+    emit(f'atualizar_jogador_{sessao_id}', {'jogadorId': jogador_id}, broadcast=True)
+
+@socketio.on('lançar_dado')
+def lancar_dado(data):
+    resultado = data['resultado']
+    jogador_id = data['jogadorId']
+    dado = data['dado']
+    sessao_id = data['sessaoId']
+
+    # Busca o jogador para obter o nome
+    jogador = get_jogador_por_id(jogador_id)
+    nome_jogador = jogador['nome'] if jogador else jogador_id
+
+    emit(f'evento_lancamento_dado_{sessao_id}', {
+        'jogadorId': jogador_id,
+        'nome': nome_jogador,  # Adicionado o nome do jogador
+        'dado': dado,
+        'resultado': resultado
+    }, broadcast=True)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

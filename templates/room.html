@@ -1,32 +1,57 @@
+<!-- room.html -->
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sessão de RPG - Jogador</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
-    <script>
-        let socket = io();
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sessão de RPG - Jogador</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+  <script>
+    // Cria a instância do socket apenas uma vez para esta página
+    let socket = io();
 
-        // Função para atualizar as informações do jogador
-        socket.on('atualizar_jogador_{{ sessao_id }}', (data) => {
-            if (data.jogadorId === '{{ jogador_id }}') {
-                document.getElementById('nome-jogador').innerText = data.novoNome;
-                document.getElementById('localizacao-jogador').innerText = data.novaLocalizacao;
-                document.getElementById('hp-jogador').innerText = `${data.novoHp} / ${data.novoHpMax}`;
-            }
-        });
-    </script>
+    // Função para enviar o lançamento de dado para o servidor
+    function lancarDado(dado) {
+      // Gera um número aleatório entre 1 e o valor do dado
+      let resultado = Math.floor(Math.random() * dado) + 1;
+      socket.emit('lançar_dado', {
+        jogadorId: '{{ jogador_id }}',
+        dado: dado,
+        resultado: resultado,
+        sessaoId: '{{ sessao_id }}'
+      });
+    }
+
+    // Atualiza as informações do jogador (se necessário)
+    socket.on('atualizar_jogador_{{ sessao_id }}', (data) => {
+      if (data.jogadorId === '{{ jogador_id }}') {
+        document.getElementById('nome-jogador').innerText = data.novoNome;
+        document.getElementById('localizacao-jogador').innerText = data.novaLocalizacao;
+        document.getElementById('hp-jogador').innerText = `${data.novoHp} / ${data.novoHpMax}`;
+      }
+    });
+  </script>
 </head>
 <body>
-    <h1>Sessão de RPG - Jogador</h1>
+  <h1>Sessão de RPG - Jogador</h1>
 
-    <fieldset>
-        <legend>Jogador: <span id="nome-jogador">{{ jogador.nome }}</span></legend>
-        Localização: <span id="localizacao-jogador">{{ jogador.localizacao }}</span><br>
-        HP: <span id="hp-jogador">{{ jogador.hp }} / {{ jogador.hp_max }}</span><br>
-    </fieldset>
+  <fieldset>
+    <legend>Jogador: <span id="nome-jogador">{{ jogador.nome }}</span></legend>
+    Localização: <span id="localizacao-jogador">{{ jogador.localizacao }}</span><br>
+    HP: <span id="hp-jogador">{{ jogador.hp }} / {{ jogador.hp_max }}</span><br>
+  </fieldset>
 
+  <h3>Lançar Dados</h3>
+  <button onclick="lancarDado(20)">Lançar D20</button>
+  <button onclick="lancarDado(12)">Lançar D12</button>
+  <button onclick="lancarDado(10)">Lançar D10</button>
+  <button onclick="lancarDado(8)">Lançar D8</button>
+  <button onclick="lancarDado(6)">Lançar D6</button>
+  <button onclick="lancarDado(4)">Lançar D4</button>
+
+  <h2>Resultados dos Lançamentos</h2>
+  <!-- Inclui o events.html, que usará o mesmo socket já instanciado -->
+  {% include 'events.html' %}
 </body>
 </html>
 

@@ -1,72 +1,67 @@
+<!-- panel.html -->
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Mestre</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
-    <script>
-        let socket = io();
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Mestre</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.js"></script>
+  <script>
+    // Cria a instância do socket apenas uma vez para esta página
+    let socket = io();
 
-        // Função para atualizar as informações do jogador
-        function atualizarJogador(jogadorId) {
-            let novoNome = document.getElementById(`nome-jogador-${jogadorId}`).innerText;  // Agora pegamos o conteúdo do legend
-            let novaLocalizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
-            let novoHp = document.getElementById(`hp-jogador-${jogadorId}`).value;
-            let novoHpMax = document.getElementById(`hp-max-jogador-${jogadorId}`).value;
+    // Função para atualizar as informações do jogador
+    function atualizarJogador(jogadorId) {
+      let novoNome = document.getElementById(`nome-jogador-${jogadorId}`).innerText;
+      let novaLocalizacao = document.getElementById(`localizacao-jogador-${jogadorId}`).value;
+      let novoHp = document.getElementById(`hp-jogador-${jogadorId}`).value;
+      let novoHpMax = document.getElementById(`hp-max-jogador-${jogadorId}`).value;
+      socket.emit('atualizar_jogador', {
+        jogadorId: jogadorId,
+        novoNome: novoNome,
+        novaLocalizacao: novaLocalizacao,
+        novoHp: novoHp,
+        novoHpMax: novoHpMax
+      });
+    }
 
-            socket.emit('atualizar_jogador', {
-                jogadorId: jogadorId,
-                novoNome: novoNome,
-                novaLocalizacao: novaLocalizacao,
-                novoHp: novoHp,
-                novoHpMax: novoHpMax
-            });
-        }
-
-		// Função para remover jogador
-		function removerJogador(jogadorId) {
-		    if (confirm("Tem certeza que deseja remover este jogador?")) {
-		        socket.emit('remover_jogador', { jogadorId: jogadorId, sessaoId: '{{ sessao_id }}' });
-		    }
-		}
-
-		// Atualiza a lista de jogadores para todos
-		socket.on('remover_jogador_{{ sessao_id }}', (data) => {
-		    let jogadorId = data.jogadorId;
-		    let jogadorElement = document.getElementById(`jogador-${jogadorId}`);
-		    if (jogadorElement) {
-		        jogadorElement.remove();
-		    }
-		});
-    </script>
+    // Função para remover jogador
+    function removerJogador(jogadorId) {
+      if (confirm("Tem certeza que deseja remover este jogador?")) {
+        socket.emit('remover_jogador', { jogadorId: jogadorId, sessaoId: '{{ sessao_id }}' });
+      }
+    }
+  </script>
 </head>
 <body>
-    <h1>Painel do Mestre - Sessão: {{ sessao.nome }}</h1>
+  <h1>Painel do Mestre - Sessão: {{ sessao.nome }}</h1>
 
-    <h2>Jogadores:</h2>
-    <ul>
-        {% for jogador in sessao.jogadores %}
-            <li id="jogador-{{ jogador.id }}">
-                <fieldset>
-                    <legend id="nome-jogador-{{ jogador.id }}">{{ jogador.nome }}</legend>  <!-- Nome exibido aqui -->
-                     
-                    Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
-                    HP: <input type="number" id="hp-jogador-{{ jogador.id }}" value="{{ jogador.hp }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
-                    HP Máximo: <input type="number" id="hp-max-jogador-{{ jogador.id }}" value="{{ jogador.hp_max }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
-                    Link do Jogador: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador.id) }}" target="_blank">Entrar</a><br>
-                    <button type="button" onclick="removerJogador('{{ jogador.id }}')">Remover Jogador</button>
-                </fieldset>
-            </li>
-        {% endfor %}
-    </ul>
+  <!-- Lista de Jogadores -->
+  <h2>Jogadores:</h2>
+  <ul>
+    {% for jogador in sessao.jogadores %}
+      <li id="jogador-{{ jogador.id }}">
+        <fieldset>
+          <legend id="nome-jogador-{{ jogador.id }}">{{ jogador.nome }}</legend> 
+          Localização: <input type="text" id="localizacao-jogador-{{ jogador.id }}" value="{{ jogador.localizacao }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
+          HP: <input type="number" id="hp-jogador-{{ jogador.id }}" value="{{ jogador.hp }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
+          HP Máximo: <input type="number" id="hp-max-jogador-{{ jogador.id }}" value="{{ jogador.hp_max }}" onchange="atualizarJogador('{{ jogador.id }}')" /><br>
+          Link do Jogador: <a href="{{ url_for('room', sessao_id=sessao_id, jogador_id=jogador.id) }}" target="_blank">Entrar</a><br>
+          <button type="button" onclick="removerJogador('{{ jogador.id }}')">Remover Jogador</button>
+        </fieldset>
+      </li>
+    {% endfor %}
+  </ul>
 
-    <h2>Criar Jogador:</h2>
-    <form action="/painel/{{ sessao_id }}" method="POST">
-        <label for="nome">Nome do Jogador:</label>
-        <input type="text" id="nome" name="nome" required>
-        <button type="submit">Adicionar Jogador</button>
-    </form>
+  <!-- Incluir o campo de Lançamentos de Dados (usa o mesmo socket criado acima) -->
+  {% include 'events.html' %}
+
+  <h2>Criar Jogador:</h2>
+  <form action="/painel/{{ sessao_id }}" method="POST">
+    <label for="nome">Nome do Jogador:</label>
+    <input type="text" id="nome" name="nome" required>
+    <button type="submit">Adicionar Jogador</button>
+  </form>
 </body>
 </html>
 
