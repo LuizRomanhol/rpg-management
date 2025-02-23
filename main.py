@@ -28,8 +28,7 @@ def index():
 
 @app.route("/criar_sessao", methods=["POST"])
 def criar_sessao():
-    dados = request.json
-    nome = dados.get("nome")
+    nome = request.form.get("nome")  # Recebe o nome da sessão via formulário
 
     if not nome:
         return jsonify({"erro": "Nome da sessão obrigatório"}), 400
@@ -39,11 +38,7 @@ def criar_sessao():
 
     sessoes[sessao_id] = {"nome": nome, "topico": topico, "mestre": None, "jogadores": []}
 
-    return jsonify({
-        "sessao_id": sessao_id,
-        "topico": topico,
-        "redirect": url_for("painel_mestre", sessao_id=sessao_id)  # URL para o painel
-    })
+    return redirect(url_for("painel_mestre", sessao_id=sessao_id))  # Redireciona para o painel
 
 
 @app.route("/room/<sessao_id>")
